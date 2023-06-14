@@ -30,7 +30,7 @@ link_libraries(Threads::Threads)
 # Gate against Windows builds.
 # ##################################################################################################
 if (WIN32)
-   message(FATAL_ERROR "EOS-VM currently only builds on Unix like OSes (Linux, Mac OSX)")
+  message(FATAL_ERROR "EOSIO-Taurus VM currently only builds on Unix like OSes (Linux, Mac OSX)")
 endif()
 
 # ##################################################################################################
