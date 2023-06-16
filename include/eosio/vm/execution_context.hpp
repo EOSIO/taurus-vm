@@ -208,6 +208,7 @@ namespace eosio { namespace vm {
       void* volatile _top_frame = nullptr;
    };
 
+#ifdef __x86_64__
    template<typename Host, bool EnableBacktrace = false>
    class jit_execution_context : public frame_info_holder<EnableBacktrace>, public execution_context_base<jit_execution_context<Host, EnableBacktrace>, Host> {
       using base_type = execution_context_base<jit_execution_context<Host, EnableBacktrace>, Host>;
@@ -279,14 +280,16 @@ namespace eosio { namespace vm {
          const func_type& ft = _mod.get_function_type(func_index);
          this->type_check_args(ft, static_cast<Args&&>(args)...);
          native_value result;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-value"
          native_value args_raw[] = { transform_arg(static_cast<Args&&>(args))... };
-
+#pragma GCC diagnostic pop
          try {
             if (func_index < _mod.get_imported_functions_size()) {
                std::reverse(args_raw + 0, args_raw + sizeof...(Args));
                result = call_host_function(args_raw, func_index);
             } else {
-               constexpr std::size_t stack_cutoff = std::max(252144, SIGSTKSZ);
+               const auto stack_cutoff = std::max<std::size_t>(252144, SIGSTKSZ);
                std::size_t maximum_stack_usage =
                   (_mod.maximum_stack + 2 /*frame ptr + return ptr*/) * (constants::max_call_depth + 1) +
                  sizeof...(Args) + 4 /* scratch space */;
@@ -472,6 +475,7 @@ namespace eosio { namespace vm {
       host_type * _host = nullptr;
       uint32_t _remaining_call_depth;
    };
+#endif
 
    template <typename Host>
    class execution_context : public execution_context_base<execution_context<Host>, Host> {
